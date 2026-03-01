@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Truth, Tricks & AI</title>
+  <!-- 引入 Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入 Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .animation-slide-up { animation: slideUp 0.4s ease-out forwards; }
+    .animation-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+    
+    /* 隱藏捲軸但保持可捲動 */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-100 font-sans text-slate-800 flex items-center justify-center p-4 relative overflow-hidden">
+  
+  <!-- 動畫背景效果 -->
+  <div class="absolute inset-0 opacity-10 pointer-events-none z-0">
+    <div class="absolute top-0 left-10 w-px h-full bg-gradient-to-b from-transparent via-cyan-500 to-transparent"></div>
+    <div class="absolute top-0 right-20 w-px h-full bg-gradient-to-b from-transparent via-purple-500 to-transparent"></div>
+  </div>
+
+  <!-- App 容器 -->
+  <div class="w-full max-w-md bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] relative z-10 flex flex-col h-[85vh]">
+    
+    <!-- Header (動態顯示) -->
+    <div id="app-header" class="hidden flex justify-between items-center p-4 bg-purple-900 text-white rounded-t-2xl shadow-md border-b-4 border-cyan-400">
+      <div class="flex items-center space-x-2">
+        <i data-lucide="bot" class="text-cyan-400"></i>
+        <span class="font-bold tracking-wider">AI Fact Checker</span>
+      </div>
+      <div class="flex items-center space-x-4 text-sm font-mono">
+        <div class="flex flex-col items-end">
+          <span class="text-purple-300 text-xs">AI 信任度</span>
+          <div class="w-20 bg-gray-700 h-2 rounded-full overflow-hidden mt-1">
+            <div id="trust-bar" class="h-full bg-orange-500 transition-all duration-500" style="width: 100%;"></div>
+          </div>
+        </div>
+        <div class="flex flex-col items-end">
+          <span class="text-purple-300 text-xs">經驗值</span>
+          <span id="score-display" class="text-cyan-400 font-bold">0 XP</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 主要內容區 -->
+    <div id="app-content" class="flex-1 overflow-y-auto p-6 flex flex-col relative no-scrollbar">
+      <!-- 內容由 JavaScript 動態渲染 -->
+    </div>
+
+    <!-- Footer (動態顯示) -->
+    <div id="app-footer" class="hidden p-3 bg-slate-100 text-center text-xs text-slate-500 rounded-b-2xl flex flex-wrap justify-center gap-2 border-t border-slate-200">
+      <span class="px-2 py-1 bg-white rounded shadow-sm">🎯 CG4 批判性評估</span>
+      <span class="px-2 py-1 bg-white rounded shadow-sm">🧠 媒體識讀</span>
+      <span class="px-2 py-1 bg-white rounded shadow-sm">🔍 Rule of Three</span>
+    </div>
+  </div>
+
+  <script>
+    // --- 題庫與課程資料 (JSON 結構) ---
+    const courseData = {
+      preTest: [
+        { id: 'p1', type: 'mcq', question: '當你在網路上看到一篇標題極度震撼的文章，你的第一個動作應該是？', options: ['馬上分享給朋友', '看底下的留言再決定', '離開原本的平台，去搜尋相關關鍵字', '相信它，因為是知名平台推播的'], correct: 2, explanation: '橫向閱讀（Lateral Reading）是查證的第一步！' },
+        { id: 'p2', type: 'mcq', question: 'AI 生成的內容（如 ChatGPT）有可能會給出完全錯誤但聽起來很自信的答案嗎？', options: ['絕對不會，AI有龐大資料庫', '有可能，這稱為「AI 幻覺」', '只在數學題會算錯', '只要輸入正確指令就不會錯'], correct: 1, explanation: 'AI 是根據機率生成文字，並非具備真實理解力，因此會產生「幻覺」。' },
+        { id: 'p3', type: 'scale', question: '目前你對於「分辨網路假訊息與AI生成內容」的信心指數有多高？', options: ['1 (毫無頭緒)', '2', '3', '4', '5 (充滿自信)'], correct: null }
+      ],
+      units: [
+        {
+          title: '單元一：你真的相信嗎？',
+          description: 'AI 有時候會「自信地說廢話」',
+          questions: [
+            { id: 'u1q1', type: 'mcq', question: '📰 震撼標題：「科學家證實：非洲正在裂開成兩半，即將形成新海洋！」', options: ['直接相信', '需要查證', '明顯假新聞'], correct: 1, explanation: '這是部分真實但被誇大的新聞。東非大裂谷確實存在，但需要數百萬年才會分裂。標題殺人法需要查證！' },
+            { id: 'u1q2', type: 'mcq', question: '📰 歷史冷知識：「NASA 為了太空人發明了 Tang 橘子粉泡飲料！」', options: ['直接相信', '需要查證', '明顯假新聞'], correct: 1, explanation: '假的！Tang 是 General Foods 於 1957 年發明的，NASA 只是在 1962 年借用它，卻被大眾誤會。' },
+            { id: 'u1q3', type: 'spot', question: 'Spot the Red Flag 🚩：請找出這段 AI 生成文字中「最可疑」的地方。', text: '「根據最新研究，喝溫水可以治癒 99.9% 的已知病毒，這項由不具名瑞士科學家於昨晚發布的報告已經震驚全球醫學界。」', options: ['根據最新研究', '99.9% 的已知病毒', '不具名瑞士科學家', '震驚全球醫學界'], correct: [1, 2], explanation: '過度誇張的數字 (99.9%) 和模糊的來源 (不具名) 都是典型的 Red Flag (紅旗警訊)！' },
+          ]
+        },
+        {
+          title: '單元二：Deepfake & 視覺錯誤',
+          description: '眼見不再為憑',
+          questions: [
+            { id: 'u2q1', type: 'image-spot', question: '🔍 找出視覺錯誤：這張「AI 生成的獲獎照片」哪裡怪怪的？', imageType: 'ai-hands', options: ['光線太亮', '手指有六根', '背景模糊', '衣服顏色不搭'], correct: 1, explanation: '目前的 AI 生成圖像模型經常在處理人類手部結構（手指數量、關節）時發生錯誤。' },
+            { id: 'u2q2', type: 'mcq', question: '這兩張人臉，哪一張是真實存在的？', imageType: 'thispersondoesnotexist', options: ['左邊的女生', '右邊的男生', '兩個都是假的', '兩個都是真的'], correct: 2, explanation: '這兩張圖都是由 thispersondoesnotexist.com 透過 GAN 技術生成的，他們在現實中不存在！注意邊緣和背景的模糊感。' },
+          ]
+        },
+        {
+          title: '單元三：偏見與認知影響',
+          description: 'AI 的偏見來自哪裡？',
+          questions: [
+            { id: 'u3q1', type: 'mcq', question: '當我們請 AI 生成「醫生」的圖片，它連續產出了 10 張都是「白人男性」。這是什麼現象？', options: ['偶然現象', 'AI 的偏見 (Bias)', '設計師故意的', '系統當機'], correct: 1, explanation: 'AI 的訓練資料來自人類社會過往的網路資料，因此它會繼承並放大社會中既存的刻板印象與偏見。' },
+            { id: 'u3q2', type: 'mcq', question: '為什麼 AI 會有偏見？ (多選)', options: ['訓練資料來自網路', '工程師故意寫入的', '人類歷史中本身就存在偏見', 'AI 有自己的主觀意識'], correct: [0, 2], explanation: 'AI 沒有意識。它就像一面鏡子，反映了餵給它的巨量人類歷史資料中的不完美與刻板印象。' },
+          ]
+        },
+        {
+          title: '單元四：橫向閱讀挑戰',
+          description: 'Rule of Three (三個來源原則)',
+          questions: [
+            { id: 'u4q1', type: 'action', question: '任務：AI 說「阿波羅11號是在 1968 年登月的」。你要怎麼查證？', options: ['在同一個對話框問 AI「你確定嗎？」', '開新分頁搜尋「阿波羅11號 登月 年份」', '去圖書館借書', '問旁邊的同學'], correct: 1, explanation: '永遠不要只在同一個平台/跟同一個 AI 查證！「離開原頁面，開啟新分頁（橫向閱讀）」才是最有效的。' },
+          ]
+        },
+        {
+          title: '單元五：人類責任',
+          description: '最終決定權在誰手上？',
+          questions: [
+            { id: 'u5q1', type: 'mcq', question: '以下哪一種決定，【絕對不能】只交給 AI 來判斷？', options: ['推薦今晚的電影', '決定罪犯的刑期', '翻譯日常郵件', '整理文章重點'], correct: 1, explanation: '牽涉到人權、生命、重大道德與法律的決定（如判刑、醫療手術），人類必須負起最終責任（Human in the loop）。' },
+            { id: 'u5q2', type: 'order', question: '🧠 設計你的查證流程（請依序點擊）', options: ['比對並得出結論', '停下來，意識到情緒被挑動', '開啟新分頁查 3 個可靠來源 (Rule of 3)', '離開原本的頁面'], correctOrder: [1, 3, 2, 0], explanation: 'S.I.F.T 策略：Stop (停下來) -> Investigate (調查來源) -> Find (尋找更好報導) -> Trace (追溯原始脈絡)。' },
+          ]
+        }
+      ],
+      postTest: [
+        { id: 'pt1', type: 'mcq', question: '經過課程，現在你認為遇到懷疑的資訊，最好的查證法是？', options: ['直覺判斷', '橫向閱讀 (開啟多個外部來源)', '問 ChatGPT 判斷真假', '看點閱率高低'], correct: 1, explanation: '橫向閱讀是專家級的查證技巧！' }
+      ]
+    };
+
+    // --- 應用程式狀態 ---
+    let state = {
+      screen: 'login', // login, pretest, intro, unit, posttest, reflection, result
+      user: { classId: '801', studentNo: '', name: '' },
+      currentUnitIdx: 0,
+      currentQuestionIdx: 0,
+      score: 0,
+      trustIndex: 100,
+      feedback: null, // { isCorrect: boolean, text: string }
+      selectedOptions: [],
+      reflectionText: '',
+      isSubmitting: false,
+      answerRecord: [] // 記錄作答歷程
+    };
+
+    // --- 流程控制與渲染 ---
+    function updateHeader() {
+      if (state.screen === 'login') {
+        document.getElementById('app-header').classList.add('hidden');
+        document.getElementById('app-footer').classList.add('hidden');
+      } else {
+        document.getElementById('app-header').classList.remove('hidden');
+        document.getElementById('app-footer').classList.remove('hidden');
+        document.getElementById('score-display').innerText = `${state.score} XP`;
+        document.getElementById('trust-bar').style.width = `${state.trustIndex}%`;
+      }
+    }
+
+    function render() {
+      const content = document.getElementById('app-content');
+      let html = '';
+
+      if (state.screen === 'login') {
+        html = `
+          <div class="flex flex-col items-center justify-center h-full space-y-6 animation-fade-in">
+            <div class="w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.4)] mb-4">
+              <i data-lucide="brain" class="w-12 h-12 text-purple-600"></i>
+            </div>
+            <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-cyan-500 text-center leading-tight">
+              Truth, Tricks <br/> & AI
+            </h1>
+            <p class="text-slate-500 font-medium">學習驗證資訊的生存挑戰</p>
+            
+            <form onsubmit="handleLogin(event)" class="w-full space-y-4 mt-8">
+              <div>
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">班級</label>
+                <select required onchange="state.user.classId = this.value" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-400 outline-none transition-all">
+                  <option value="801" selected>801</option>
+                  <option value="802">802</option>
+                  <option value="803">803</option>
+                  <option value="804">804</option>
+                  <option value="805">805</option>
+                  <option value="806">806</option>
+                </select>
+              </div>
+              <div class="flex space-x-4">
+                <div class="w-1/3">
+                  <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">座號</label>
+                  <input required type="number" min="1" max="99" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-400 outline-none transition-all" placeholder="01" value="${state.user.studentNo}" oninput="state.user.studentNo = this.value" />
+                </div>
+                <div class="w-2/3">
+                  <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">姓名</label>
+                  <input required type="text" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-400 outline-none transition-all" placeholder="你的名字" value="${state.user.name}" oninput="state.user.name = this.value" />
+                </div>
+              </div>
+              <button type="submit" class="w-full py-4 mt-6 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold rounded-xl shadow-lg shadow-purple-200 hover:shadow-cyan-200 transform hover:-translate-y-1 transition-all flex justify-center items-center">
+                開始挑戰 <i data-lucide="chevron-right" class="ml-2 w-5 h-5"></i>
+              </button>
+            </form>
+
+            <!-- 新增：教學簡報與作答紀錄按鈕 -->
+            <div class="w-full flex flex-col space-y-3 mt-2 border-t border-slate-200 pt-5">
+              <a href="https://btosichen.github.io/2026Truth-Tricks/ppt.html" target="_blank" class="w-full py-3 bg-white border-2 border-slate-200 text-slate-600 font-bold rounded-xl shadow-sm hover:border-indigo-400 hover:text-indigo-600 transition-all flex justify-center items-center">
+                <i data-lucide="monitor-play" class="w-5 h-5 mr-2"></i> 觀看教學簡報
+              </a>
+              <a href="https://docs.google.com/spreadsheets/d/1B4qbOwuAF7lTYoVrt2KhgLCWR7kdUi58WFcBD9ie3mw/edit?usp=sharing" target="_blank" class="w-full py-3 bg-white border-2 border-slate-200 text-slate-600 font-bold rounded-xl shadow-sm hover:border-green-400 hover:text-green-600 transition-all flex justify-center items-center">
+                <i data-lucide="table" class="w-5 h-5 mr-2"></i> 學生作答紀錄
+              </a>
+            </div>
+
+          </div>
+        `;
+      } 
+      else if (state.screen === 'intro') {
+        const unit = courseData.units[state.currentUnitIdx];
+        html = `
+          <div class="flex flex-col items-center justify-center h-full text-center space-y-6 animation-fade-in">
+            <div class="inline-block p-3 bg-orange-100 rounded-full mb-4">
+              <i data-lucide="alert-triangle" class="w-10 h-10 text-orange-500"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-purple-800">${unit.title}</h2>
+            <p class="text-lg text-slate-600 font-medium">${unit.description}</p>
+            <button onclick="startUnit()" class="mt-8 px-8 py-3 bg-cyan-500 text-white font-bold rounded-full shadow-md hover:bg-cyan-400 transition-colors">
+              進入任務
+            </button>
+          </div>
+        `;
+      }
+      else if (state.screen === 'pretest' || state.screen === 'unit' || state.screen === 'posttest') {
+        let currentQuestions = state.screen === 'pretest' ? courseData.preTest : (state.screen === 'unit' ? courseData.units[state.currentUnitIdx].questions : courseData.postTest);
+        let q = currentQuestions[state.currentQuestionIdx];
+        let isScale = q.type === 'scale';
+        let sectionTitle = state.screen === 'pretest' ? '前測' : (state.screen === 'posttest' ? '後測' : courseData.units[state.currentUnitIdx].title);
+
+        let optionsHtml = q.options.map((opt, idx) => {
+          let btnStyle = "p-4 text-left rounded-xl border-2 font-medium transition-all duration-200 flex items-center justify-between ";
+          let iconHtml = "";
+
+          if (state.feedback) {
+            if (isScale) {
+              btnStyle += state.selectedOptions.includes(idx) ? "bg-purple-100 border-purple-500 text-purple-700" : "bg-white border-slate-200 opacity-50";
+            } else {
+              let isThisCorrect = q.correct === idx || (Array.isArray(q.correct) && q.correct.includes(idx)) || (q.correctOrder && q.correctOrder.includes(idx));
+              if (isThisCorrect) {
+                btnStyle += "bg-green-50 border-green-400 text-green-700";
+                iconHtml = `<i data-lucide="check-circle-2" class="w-5 h-5 text-green-500"></i>`;
+              } else if (state.selectedOptions.includes(idx)) {
+                btnStyle += "bg-red-50 border-red-400 text-red-700";
+                iconHtml = `<i data-lucide="x-circle" class="w-5 h-5 text-red-500"></i>`;
+              } else {
+                btnStyle += "bg-white border-slate-200 opacity-50";
+              }
+            }
+          } else {
+            btnStyle += state.selectedOptions.includes(idx) ? "bg-cyan-50 border-cyan-400 text-cyan-800" : "bg-white border-slate-200 hover:border-cyan-300 hover:bg-cyan-50 text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:scale-95 cursor-pointer";
+          }
+
+          return `
+            <button ${state.feedback ? 'disabled' : ''} onclick="handleAnswer(${idx})" class="${btnStyle}">
+              <span class="text-sm">${opt}</span>
+              ${iconHtml}
+            </button>
+          `;
+        }).join('');
+
+        let specialHtml = "";
+        if (q.type === 'spot') {
+          specialHtml = `<div class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-slate-600 italic mb-4 text-sm leading-relaxed">${q.text}</div>`;
+        } else if (q.imageType) {
+          if (q.imageType === 'ai-hands') {
+            specialHtml = `
+              <div class="w-full h-40 bg-slate-200 rounded-xl mb-4 flex items-center justify-center overflow-hidden border border-slate-300 relative group cursor-crosshair">
+                <div class="text-center text-slate-400">
+                  <i data-lucide="user" class="w-16 h-16 mx-auto mb-2 opacity-50"></i>
+                  <p class="text-xs font-bold uppercase tracking-wider">AI Generated Portrait</p>
+                  <div class="absolute bottom-2 right-2 w-8 h-8 rounded-full border-2 border-red-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                </div>
+              </div>`;
+          } else {
+            specialHtml = `
+              <div class="w-full h-40 bg-slate-200 rounded-xl mb-4 flex items-center justify-center overflow-hidden border border-slate-300 relative group cursor-crosshair">
+                <div class="flex w-full h-full">
+                  <div class="w-1/2 h-full bg-slate-300 flex items-center justify-center border-r border-slate-400">Face A</div>
+                  <div class="w-1/2 h-full bg-slate-200 flex items-center justify-center">Face B</div>
+                </div>
+              </div>`;
+          }
+        }
+
+        let feedbackHtml = "";
+        if (state.feedback) {
+          let bgClass = state.feedback.isCorrect === null ? 'bg-purple-50 border-purple-200' : (state.feedback.isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200');
+          let iconType = state.feedback.isCorrect === null ? 'bot' : (state.feedback.isCorrect ? 'check-circle-2' : 'alert-triangle');
+          let iconColor = state.feedback.isCorrect === null ? 'text-purple-500' : (state.feedback.isCorrect ? 'text-green-500' : 'text-red-500');
+          let titleColor = state.feedback.isCorrect === null ? 'text-purple-700' : (state.feedback.isCorrect ? 'text-green-700' : 'text-red-700');
+          let titleText = state.feedback.isCorrect === null ? '紀錄成功' : (state.feedback.isCorrect ? '觀念正確！' : '注意囉！');
+
+          feedbackHtml = `
+            <div class="mt-auto pt-4 animation-slide-up">
+              <div class="p-4 rounded-xl flex items-start space-x-3 border ${bgClass}">
+                <div class="flex-shrink-0 mt-1">
+                  <i data-lucide="${iconType}" class="${iconColor}"></i>
+                </div>
+                <div class="flex-1">
+                  <h4 class="font-bold text-sm ${titleColor}">${titleText}</h4>
+                  <p class="text-sm text-slate-600 mt-1">${state.feedback.text}</p>
+                  <button onclick="nextQuestion()" class="mt-3 px-4 py-3 bg-slate-800 text-white text-sm font-bold rounded-lg hover:bg-slate-700 transition-colors w-full flex justify-center items-center">
+                    下一步 <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        html = `
+          <div class="flex flex-col h-full animation-slide-up">
+            <div class="text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest flex justify-between">
+              <span>${sectionTitle}</span>
+              <span>${state.currentQuestionIdx + 1} / ${currentQuestions.length}</span>
+            </div>
+            
+            <div class="bg-white border-2 border-slate-100 rounded-2xl p-5 shadow-sm mb-2 flex-shrink-0">
+              <h3 class="text-lg font-bold text-slate-800 leading-relaxed mb-4">${q.question}</h3>
+              ${specialHtml}
+              <div class="grid gap-3 ${q.options.length > 2 ? 'grid-cols-1' : 'grid-cols-2'}">
+                ${optionsHtml}
+              </div>
+            </div>
+            ${feedbackHtml}
+          </div>
+        `;
+      }
+      else if (state.screen === 'reflection') {
+        html = `
+          <div class="flex flex-col h-full animation-fade-in">
+            <div class="flex items-center space-x-2 mb-6">
+              <i data-lucide="search" class="w-6 h-6 text-orange-500"></i>
+              <h2 class="text-xl font-bold text-slate-800">最後的思考</h2>
+            </div>
+            <p class="text-slate-600 font-medium mb-4">學完這堂課後，請用一句話寫下：<br/><b>未來你打算用什麼策略來查證網路上的資訊？</b></p>
+            
+            <textarea 
+              class="w-full h-32 p-4 bg-slate-50 border-2 border-slate-200 rounded-xl focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50 outline-none resize-none transition-all mb-auto"
+              placeholder="例如：我會離開原本的頁面，去Google搜尋..."
+              oninput="state.reflectionText = this.value; document.getElementById('submitBtn').disabled = this.value.length < 5;"
+            >${state.reflectionText}</textarea>
+
+            <button id="submitBtn" onclick="submitData()" disabled class="w-full py-4 mt-6 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold rounded-xl shadow-lg hover:shadow-cyan-200 transition-all disabled:opacity-50 flex justify-center items-center">
+              送出成績與學習紀錄
+            </button>
+          </div>
+        `;
+      }
+      else if (state.screen === 'result') {
+        html = `
+          <div class="flex flex-col items-center justify-center h-full text-center space-y-6 animation-slide-up">
+            <div class="relative">
+              <div class="absolute inset-0 bg-cyan-400 blur-xl opacity-30 rounded-full"></div>
+              <i data-lucide="award" class="w-24 h-24 text-cyan-500 relative z-10 drop-shadow-lg"></i>
+            </div>
+            
+            <div>
+              <h2 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-cyan-500">
+                Fact Checker
+              </h2>
+              <p class="text-slate-500 font-medium mt-1 uppercase tracking-widest text-sm">Level 1 認證達成</p>
+            </div>
+
+            <div class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 mt-4 space-y-4 shadow-sm">
+              <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+                <span class="text-slate-500 font-bold">獲得經驗值</span>
+                <span class="text-xl font-bold text-purple-600">${state.score} XP</span>
+              </div>
+              <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+                <span class="text-slate-500 font-bold">最終 AI 信任指數</span>
+                <span class="text-xl font-bold text-orange-500">${state.trustIndex}%</span>
+              </div>
+              <p class="text-xs text-slate-400 text-left pt-2 leading-relaxed">
+                * 信任指數低於 70% 代表你具備良好的健康懷疑態度 (Healthy Skepticism)。記住，人類要為最終決定負責！
+              </p>
+            </div>
+            
+            <p class="text-sm font-bold text-green-600 flex items-center mt-4">
+              <i data-lucide="check-circle-2" class="w-4 h-4 mr-1"></i> 學習紀錄已上傳
+            </p>
+          </div>
+        `;
+      }
+
+      content.innerHTML = html;
+      updateHeader();
+      lucide.createIcons();
+    }
+
+    // --- 互動邏輯函數 ---
+    window.handleLogin = function(e) {
+      e.preventDefault();
+      if (state.user.classId && state.user.studentNo && state.user.name) {
+        state.screen = 'pretest';
+        render();
+      }
+    };
+
+    window.startUnit = function() {
+      state.screen = 'unit';
+      render();
+    };
+
+    window.handleAnswer = function(idx) {
+      if (state.feedback) return; // 已有回饋時鎖定
+
+      let currentQuestions = state.screen === 'pretest' ? courseData.preTest : (state.screen === 'unit' ? courseData.units[state.currentUnitIdx].questions : courseData.postTest);
+      let q = currentQuestions[state.currentQuestionIdx];
+      let isCorrect = false;
+
+      if (q.type === 'mcq' || q.type === 'image-spot' || q.type === 'action') {
+        isCorrect = (idx === q.correct);
+        state.selectedOptions = [idx];
+      } else if (q.type === 'spot' || q.type === 'order') {
+        if (!state.selectedOptions.includes(idx)) {
+          state.selectedOptions.push(idx);
+        }
+        
+        if (q.type === 'order' && state.selectedOptions.length < q.correctOrder.length) {
+          render(); return; // 還沒選完
+        }
+        if (q.type === 'spot' && state.selectedOptions.length < q.correct.length) {
+           render(); return; // 還沒選完
+        }
+        
+        if (q.type === 'order') {
+          isCorrect = JSON.stringify(state.selectedOptions) === JSON.stringify(q.correctOrder);
+        } else {
+          isCorrect = q.correct.every(val => state.selectedOptions.includes(val));
+        }
+      } else if (q.type === 'scale') {
+        isCorrect = true; // 量表題不計對錯
+        state.selectedOptions = [idx];
+      }
+
+      state.feedback = {
+        isCorrect: q.type === 'scale' ? null : isCorrect,
+        text: q.explanation || '繼續保持！'
+      };
+
+      if (isCorrect && q.type !== 'scale') {
+        state.score += 10;
+        if (state.screen === 'unit') {
+          state.trustIndex = Math.max(50, state.trustIndex - Math.floor(Math.random() * 8 + 5));
+        }
+      }
+      render();
+    };
+
+    window.nextQuestion = function() {
+      // 紀錄作答歷程
+      let currentQuestions = state.screen === 'pretest' ? courseData.preTest : (state.screen === 'unit' ? courseData.units[state.currentUnitIdx].questions : courseData.postTest);
+      let q = currentQuestions[state.currentQuestionIdx];
+      
+      let answerText = state.selectedOptions.map(optIdx => q.options[optIdx]).join('、');
+      
+      state.answerRecord.push({
+        unit: state.screen === 'unit' ? courseData.units[state.currentUnitIdx].title : state.screen,
+        question: q.question,
+        userAnswer: answerText,
+        isCorrect: state.feedback.isCorrect === null ? '量表' : (state.feedback.isCorrect ? '正確' : '錯誤')
+      });
+
+      // 狀態重置與換題
+      state.feedback = null;
+      state.selectedOptions = [];
+
+      if (state.currentQuestionIdx < currentQuestions.length - 1) {
+        state.currentQuestionIdx++;
+      } else {
+        if (state.screen === 'pretest') {
+          state.screen = 'intro';
+          state.currentUnitIdx = 0;
+        } else if (state.screen === 'unit') {
+          if (state.currentUnitIdx < courseData.units.length - 1) {
+            state.currentUnitIdx++;
+            state.screen = 'intro';
+          } else {
+            state.screen = 'posttest';
+          }
+        } else if (state.screen === 'posttest') {
+          state.screen = 'reflection';
+        }
+        state.currentQuestionIdx = 0;
+      }
+      render();
+    };
+
+    window.submitData = async function() {
+      const btn = document.getElementById('submitBtn');
+      btn.innerHTML = `<i data-lucide="refresh-ccw" class="w-5 h-5 animate-spin"></i> 上傳中...`;
+      btn.disabled = true;
+      lucide.createIcons();
+
+      // 將作答紀錄轉為易讀文字字串
+      let recordString = state.answerRecord.map((r, i) => `Q${i+1} [${r.isCorrect}]: ${r.userAnswer}`).join('\n');
+
+      const finalData = {
+        classId: state.user.classId,
+        studentNo: state.user.studentNo,
+        name: state.user.name,
+        score: state.score,
+        trustIndex: state.trustIndex,
+        reflection: state.reflectionText,
+        answerRecord: recordString,
+        timestamp: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
+      };
+
+      console.log("準備上傳的資料:", finalData);
+      
+      // 已替換為您的 GAS 網址
+      const GAS_URL = "https://script.google.com/macros/s/AKfycbztBauB9di4VR_FALNFmD1VdOIoC93wWBmGSbAjk4QFw7g_WAqRZzQNItLLdIvOMx4-/exec"; 
+      
+      try {
+        await fetch(GAS_URL, {
+          method: 'POST',
+          body: JSON.stringify(finalData),
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' } // 避免 GAS CORS 阻擋
+        });
+      } catch (err) {
+        console.error("上傳失敗", err);
+      }
+
+      state.screen = 'result';
+      render();
+    };
+
+    // 初始渲染
+    render();
+  </script>
+</body>
+</html>
