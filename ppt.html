@@ -17,6 +17,15 @@
             --text: #1e293b;
             --slide-bg: #ffffff;
             --success: #22c55e;
+            
+            /* 台灣案例區塊專用顏色 */
+            --tw-yellow-bg: #fef9c3;
+            --tw-yellow-border: #fde047;
+            --tw-yellow-text: #713f12;
+            
+            --tw-mint-bg: #ecfdf5;
+            --tw-mint-border: #6ee7b7;
+            --tw-mint-text: #064e3b;
         }
 
         * {
@@ -205,6 +214,66 @@
             display: block;
         }
 
+        /* 臺灣生活化案例補充區塊 (新增樣式) */
+        .tw-case-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            background: var(--tw-yellow-bg);
+            border: 2px solid var(--tw-yellow-border);
+            border-radius: 20px;
+            padding: 20px 25px;
+            margin-top: 25px;
+            box-shadow: 0 8px 20px rgba(250, 204, 21, 0.15);
+            color: var(--tw-yellow-text);
+            text-align: left;
+        }
+
+        .tw-case-box.mint {
+            background: var(--tw-mint-bg);
+            border: 2px solid var(--tw-mint-border);
+            box-shadow: 0 8px 20px rgba(52, 211, 153, 0.15);
+            color: var(--tw-mint-text);
+        }
+
+        .tw-case-icon {
+            font-size: 36px;
+            flex-shrink: 0;
+            margin-top: -5px;
+        }
+
+        .tw-case-content h4 {
+            font-size: 20px;
+            font-weight: 900;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tw-case-content p {
+            font-size: 18px !important; /* 確保字體適中易讀 */
+            line-height: 1.5 !important;
+            margin-bottom: 5px !important;
+            color: inherit !important; /* 繼承外框顏色設定，避免被預設灰色覆蓋 */
+        }
+        
+        .tw-case-content ul {
+            font-size: 18px;
+            margin-left: 20px;
+            line-height: 1.5;
+            list-style-type: none;
+        }
+
+        .tw-case-content ul li::before {
+            content: "✔";
+            color: var(--accent);
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+
         /* Navigation Controls */
         .controls {
             position: fixed;
@@ -269,6 +338,7 @@
             .slide-deck { aspect-ratio: auto; height: 80vh; }
             .tile-grid { grid-template-columns: 1fr; }
             .visual-placeholder { height: 200px; }
+            .tw-case-box { margin-top: 15px; }
         }
     </style>
 </head>
@@ -292,6 +362,15 @@
                 <h1 style="font-size: 60px; font-weight: 900; background: linear-gradient(45deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Truth, Tricks, and AI</h1>
                 <h2 style="font-size: 32px; margin-top: 10px;">真相、詭計與 AI</h2>
                 <p style="font-size: 24px; color: #64748b; margin-top: 15px;">國中八年級媒體識讀升級版</p>
+                
+                <!-- 臺灣生活案例區塊 -->
+                <div class="tw-case-box mint" style="max-width: 600px; margin: 30px auto 0;">
+                    <div class="tw-case-icon">📱</div>
+                    <div class="tw-case-content">
+                        <h4>🇹🇼 臺灣生活案例</h4>
+                        <p>從 IG 推薦影片、YouTube 演算法，到 LINE 貼圖推薦與蝦皮猜你喜歡，<strong>AI 每天都在幫你「做選擇」！</strong></p>
+                    </div>
+                </div>
             </div>
 
             <!-- Slide 2: Quote -->
@@ -304,6 +383,19 @@
                         </blockquote>
                         <p style="margin-top: 30px;">如果你在 IG 或 TikTok 看到這句話，你會馬上相信並轉發嗎？</p>
                         <p style="color: var(--accent); font-weight: 700;">💡 大腦在接收資訊前，需要一個「緩衝區」。</p>
+
+                        <!-- 臺灣生活案例區塊 -->
+                        <div class="tw-case-box">
+                            <div class="tw-case-icon">🏫</div>
+                            <div class="tw-case-content">
+                                <h4>🇹🇼 臺灣生活案例</h4>
+                                <p>💡 如果你在 IG 或 Threads 看到：<br>
+                                「某手搖飲含致癌物」<br>
+                                「某高中作弊全班被取消成績」<br>
+                                「某明星出車禍」<br>
+                                <strong>你會立刻轉發嗎？</strong></p>
+                            </div>
+                        </div>
                     </div>
                     <div class="visual-placeholder">
                         <i class="fa-solid fa-lightbulb"></i>
@@ -332,6 +424,21 @@
                         <p>不合邏輯的細節，或是用 AI 算出來、根本不存在的虛擬照片。</p>
                     </div>
                 </div>
+                
+                <!-- 臺灣生活案例區塊 -->
+                <div class="tw-case-box mint" style="margin-top: 30px;">
+                    <div class="tw-case-icon">📰</div>
+                    <div class="tw-case-content">
+                        <h4>🇹🇼 臺灣生活案例</h4>
+                        <p>在臺灣常見的誤導例子：<strong>LINE 群組傳來「明天停課假消息」、假抽獎連結、假公益捐款網站。</strong></p>
+                        <p style="margin-top: 5px;">這類誤導資訊通常具備三大特徵：</p>
+                        <ul>
+                            <li>聳動</li>
+                            <li>很急</li>
+                            <li>要你立刻行動</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
 
             <!-- Slide 4: AI Illusion -->
@@ -343,6 +450,16 @@
                         <p>它根據機率預測下一個字，當它不知道答案時，就會一本正經地開始<strong>「胡說八道」</strong>。</p>
                         <div style="background: #fff5ed; padding: 25px; border-radius: 20px; border: 2px solid var(--accent); margin-top: 20px;">
                             <p style="color: var(--accent); font-weight: bold; margin-bottom: 0;">這種現象稱為「AI 幻覺 (AI Hallucination)」</p>
+                        </div>
+                        
+                        <!-- 臺灣生活案例區塊 -->
+                        <div class="tw-case-box">
+                            <div class="tw-case-icon">🤖</div>
+                            <div class="tw-case-content">
+                                <h4>🇹🇼 臺灣生活案例</h4>
+                                <p>當你問 AI：「台北 101 是誰設計的？」如果 AI 記憶模糊，它可能會<strong>「猜一個合理答案」</strong>，甚至編造不存在的歷史人物或新聞報導。<br>
+                                但合理 ≠ 正確，如果你拿去做報告，會發生什麼事？</p>
+                            </div>
                         </div>
                     </div>
                     <div class="visual-placeholder">
@@ -364,6 +481,16 @@
                         <p><strong>Deepfake 就像數位換臉術</strong>，利用 AI 學習真實人臉與聲音，合成出極真實的假影片。</p>
                         <p>目前的技術甚至可以完美模仿家人聲音，進行視訊詐騙。</p>
                         <p style="font-weight: 700; background: #f1f5f9; padding: 10px; border-radius: 10px;">⚠️ 找碴技巧：觀察手指數量、牙齒形狀、背景亂碼。</p>
+
+                        <!-- 臺灣生活案例區塊 -->
+                        <div class="tw-case-box mint">
+                            <div class="tw-case-icon">🚇</div>
+                            <div class="tw-case-content">
+                                <h4>🇹🇼 臺灣生活案例</h4>
+                                <p>如果有影片顯示：<strong>某政治人物說奇怪的話</strong>或<strong>某藝人公開道歉</strong>，但其實是 AI 合成的！<br>
+                                仔細看背景招牌可能寫著「台北1011」或中文字拼錯等 AI 視覺錯誤，如果沒查證就轉發，會造成什麼影響？</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -376,6 +503,16 @@
                         <p>AI 是跟著人類網路資料學習的。如果網路上存在偏見，AI 就會學進去。</p>
                         <p>例如：搜尋「CEO」，AI 可能只給出男性圖像，這就是一種刻板印象的強化。</p>
                         <p style="color: var(--secondary); font-weight: bold; font-size: 24px;">我們需要用多元觀點來對抗偏見！</p>
+
+                        <!-- 臺灣生活案例區塊 -->
+                        <div class="tw-case-box">
+                            <div class="tw-case-icon">🏫</div>
+                            <div class="tw-case-content">
+                                <h4>🇹🇼 臺灣生活案例</h4>
+                                <p>如果 AI 生成：工程師 → 男生、護理師 → 女生、老闆 → 西裝男性，代表它學到的是「刻板印象」。<br>
+                                如果你從小只看到偏鄉學校資源少、某族群常被標籤，AI 也學到這些，<strong>會不會讓偏見更強？</strong></p>
+                            </div>
+                        </div>
                     </div>
                     <div class="visual-placeholder">
                         <i class="fa-solid fa-scale-unbalanced"></i>
@@ -395,6 +532,17 @@
                             <li style="margin-bottom: 15px;"><i class="fa-solid fa-magnifying-glass" style="color: var(--primary); margin-right: 10px;"></i> 查核事實查核網站。</li>
                             <li style="margin-bottom: 15px;"><i class="fa-solid fa-building-columns" style="color: var(--primary); margin-right: 10px;"></i> 對比政府 (.gov) 或學校 (.edu) 來源。</li>
                         </ul>
+
+                        <!-- 臺灣生活案例區塊 -->
+                        <div class="tw-case-box mint">
+                            <div class="tw-case-icon">📱</div>
+                            <div class="tw-case-content">
+                                <h4>🇹🇼 臺灣生活案例</h4>
+                                <p>如果 AI 說：「某高中已改成完全免試入學」，你會：<br>
+                                A 直接相信 / B 查教育部網站 / C 看三個來源？</p>
+                                <p style="margin-top: 5px;"><strong>不要只看一個部落格！</strong>要：✔ 看政府網站 ✔ 看新聞媒體 ✔ 看官方公告。</p>
+                            </div>
+                        </div>
                     </div>
                     <div class="visual-placeholder">
                         <i class="fa-solid fa-layer-group"></i>
@@ -418,6 +566,17 @@
                             <div style="padding: 15px; background: #fff1f2; border-radius: 12px;"><i class="fa-solid fa-xmark" style="color: #e11d48;"></i> 找不到作者或真實來源</div>
                             <div style="padding: 15px; background: #fff1f2; border-radius: 12px;"><i class="fa-solid fa-xmark" style="color: #e11d48;"></i> 充滿大量彈跳式廣告</div>
                         </div>
+
+                        <!-- 臺灣生活案例區塊 -->
+                        <div class="tw-case-box">
+                            <div class="tw-case-icon">📰</div>
+                            <div class="tw-case-content">
+                                <h4>🇹🇼 臺灣生活案例</h4>
+                                <p>標題：<strong>「震驚！某夜市小吃含塑化劑！」</strong></p>
+                                <p>點進去：沒有來源、沒有記者、全是廣告。<br>
+                                這就是內容農場常見的詐騙流量模式！</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -432,6 +591,16 @@
                         <p style="font-size: 28px; color: var(--accent); font-weight: 900; margin-top: 20px;">
                             查證三次，分享零次！
                         </p>
+
+                        <!-- 臺灣生活案例區塊 -->
+                        <div class="tw-case-box mint">
+                            <div class="tw-case-icon">🤖</div>
+                            <div class="tw-case-content">
+                                <h4>🇹🇼 臺灣生活案例</h4>
+                                <p>AI 可以幫你寫作文、找資料、推薦影片，但<strong>不能代替你思考、不能代替你判斷真假</strong>。</p>
+                                <p style="margin-top: 5px;">AI 不會坐牢，不會道歉，人類才負責！如果 AI 判定你信用分數低、考試作弊、可能違規，你有申訴機會嗎？</p>
+                            </div>
+                        </div>
                     </div>
                     <div class="visual-placeholder">
                         <i class="fa-solid fa-shield-halved"></i>
@@ -442,15 +611,29 @@
 
             <!-- Slide 10: Final Slide -->
             <div class="slide" style="justify-content: center; align-items: center; text-align: center;">
-                <i class="fa-solid fa-circle-check" style="font-size: 100px; color: var(--success); margin-bottom: 25px; filter: drop-shadow(0 10px 15px rgba(34, 197, 94, 0.3));"></i>
-                <h1 style="font-size: 52px; font-weight: 900;">AI 很聰明，但你更聰明！</h1>
-                <p style="font-size: 26px; color: #64748b; max-width: 800px; margin-top: 20px;">
+                <i class="fa-solid fa-circle-check" style="font-size: 80px; color: var(--success); filter: drop-shadow(0 10px 15px rgba(34, 197, 94, 0.3));"></i>
+                <h1 style="font-size: 52px; font-weight: 900; margin-top: 15px;">AI 很聰明，但你更聰明！</h1>
+                <p style="font-size: 24px; color: #64748b; max-width: 800px; margin-top: 15px;">
                     恭喜完成課程！現在你已經具備偵測 AI 詭計與假訊息的基本超能力了。
                 </p>
+
+                <!-- 臺灣生活案例區塊 (作為總結) -->
+                <div class="tw-case-box" style="max-width: 600px; margin: 25px auto 0; text-align: left;">
+                    <div class="tw-case-icon">🇹🇼</div>
+                    <div class="tw-case-content">
+                        <h4>本課核心能力總結</h4>
+                        <ul>
+                            <li>看懂社群資訊</li>
+                            <li>不被假新聞騙</li>
+                            <li>理解 AI 如何影響生活</li>
+                        </ul>
+                        <p style="margin-top: 10px; font-weight: bold; color: var(--accent);">在 AI 時代，最重要的能力不是「會用 AI」，而是「會判斷 AI」！</p>
+                    </div>
+                </div>
                 
-                <div style="margin-top: 50px; padding: 40px; background: #f8fafc; border-radius: 30px; border: 3px dashed #cbd5e1; max-width: 600px;">
-                    <p style="font-weight: bold; margin-bottom: 20px; font-size: 20px;">準備好接受最終任務挑戰了嗎？</p>
-                    <a href="https://docs.google.com/document/d/1V_mOhB_arL-t7vHCQMRK41UY-KwQDKly/edit?usp=sharing&ouid=104546515696060670125&rtpof=true&sd=true" target="_blank" class="cta-button">
+                <div style="margin-top: 30px; padding: 30px; background: #f8fafc; border-radius: 30px; border: 3px dashed #cbd5e1; max-width: 600px;">
+                    <p style="font-weight: bold; margin-bottom: 15px; font-size: 20px;">Exit Ticket：準備好接受最終任務挑戰了嗎？</p>
+                    <a href="https://docs.google.com/document/d/1V_mOhB_arL-t7vHCQMRK41UY-KwQDKly/edit?usp=sharing&ouid=104546515696060670125&rtpof=true&sd=true" target="_blank" class="cta-button" style="margin-top: 10px;">
                         <i class="fa-solid fa-file-pen"></i> 開啟學習單挑戰
                     </a>
                 </div>
