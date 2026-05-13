@@ -254,28 +254,11 @@
         }).join('');
 
         let specialHtml = "";
-        if (q.type === 'spot') {
-          specialHtml = `<div class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-slate-600 italic mb-4 text-sm leading-relaxed">${q.text}</div>`;
-        } else if (q.imageType) {
-          if (q.imageType === 'ai-hands') {
-            specialHtml = `
-              <div class="w-full h-40 bg-slate-200 rounded-xl mb-4 flex items-center justify-center overflow-hidden border border-slate-300 relative group cursor-crosshair">
-                <div class="text-center text-slate-400">
-                  <i data-lucide="user" class="w-16 h-16 mx-auto mb-2 opacity-50"></i>
-                  <p class="text-xs font-bold uppercase tracking-wider">AI Generated Portrait</p>
-                  <div class="absolute bottom-2 right-2 w-8 h-8 rounded-full border-2 border-red-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                </div>
-              </div>`;
-          } else {
-            specialHtml = `
-              <div class="w-full h-40 bg-slate-200 rounded-xl mb-4 flex items-center justify-center overflow-hidden border border-slate-300 relative group cursor-crosshair">
-                <div class="flex w-full h-full">
-                  <div class="w-1/2 h-full bg-slate-300 flex items-center justify-center border-r border-slate-400">Face A</div>
-                  <div class="w-1/2 h-full bg-slate-200 flex items-center justify-center">Face B</div>
-                </div>
-              </div>`;
-          }
-        }
+       if (q.type === 'spot') {
+  specialHtml = `<div class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-slate-600 italic mb-4 text-sm leading-relaxed">${q.text}</div>`;
+} else if (q.image) {
+  specialHtml = `<img src="${q.image}" alt="題目圖片" class="w-full rounded-xl mb-4 border border-slate-200 object-contain max-h-56" onerror="this.style.display='none'" />`;
+}
 
         let feedbackHtml = "";
         if (state.feedback) {
